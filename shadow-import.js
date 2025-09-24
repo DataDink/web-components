@@ -8,7 +8,7 @@ class ShadowImport extends HTMLElement {
   /**
    * @property {string} src - The URL to the content to import.
    */
-  get src() { return this.getAttribute('src'); }
+  get src() { return this.getAttribute('src') ?? ''; }
   set src(value) { value == null ? this.removeAttribute('src') : this.setAttribute('src', value); }
   /**
    * @property {boolean} css - Set to true if a matching css file should be loaded.
@@ -52,15 +52,17 @@ class ShadowImport extends HTMLElement {
     component.#attached = true;
     const path = component.src.split('?')[0].split('#')[0];
     const file = path.replace(/\.[^\\\/]+$/, '');
-    const text = await fetch(path).then(async r => r.ok ? (await r.text()) : null)
-                 ?? await fetch(`${file}.html`).then(async r => r.ok ? (await r.text()) : null)
-                 ?? await fetch(`${file}.htm`).then(async r => r.ok ? (await r.text()) : null);
+    const empty = !file.trim().length;
+    const text = empty ? ''
+      : await fetch(path).then(async r => r.ok ? (await r.text()) : null)
+      ?? await fetch(`${file}.html`).then(async r => r.ok ? (await r.text()) : null)
+      ?? await fetch(`${file}.htm`).then(async r => r.ok ? (await r.text()) : null);
     if (text == null) { throw new Error(`Failed to load content from ${path} or ${file}.html or ${file}.htm`); }
     const markup = component.text ? document.createElement('div').appendChild(document.createTextNode(text)).parentNode.innerHTML : text;
-    component.content.innerHTML = component.css
+    component.content.innerHTML = (!empty && component.css)
       ? `<link rel="stylesheet" href="${file}.css" />${markup}`
       : markup;
-    if (!component.js) { return; }
+    if (empty || !component.js) { return; }
     const url = new URL(file, location.href).href;
     const module = await import(`${url}.js`);
     const isScript = module.default && module.default.prototype instanceof ShadowImport.ContentScript;

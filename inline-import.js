@@ -73,3 +73,6 @@ class InlineImport extends HTMLElement {
     }
   }
 }
+
+export { InlineImport }
+customElements.define('inline-import', InlineImport);
