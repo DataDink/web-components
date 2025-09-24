@@ -1,6 +1,10 @@
 # web-components
 my common components for copy/paste
 
+> [!WARNING]
+> Breaking changes are sure to happen here.
+> These files should only be copy/pasted into projects, not linked to.
+
 ## ShadowImport
 
 ```<shadow-import src css js></shadow-import>```
