@@ -69,7 +69,7 @@ class SrcNav extends HTMLElement {
     component.#attached = false;
     window.removeEventListener('hashchange', component.#navHandler);
   }
-  #navHandler() { SrcNav.navigate(this); }
+  #navHandler = e => SrcNav.navigate(this);
   /**
    * @static
    * @method navigate
