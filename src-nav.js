@@ -30,6 +30,7 @@ class SrcNav extends HTMLElement {
     this.addEventListener('click', e => {
       const target = e.target.closest('a');
       if (!target) { return; }
+      if (target.hasAttribute('target')) { return; }
       e.preventDefault();
       const src = target.getAttribute('href');
       SrcNav.navigate(this, src);
