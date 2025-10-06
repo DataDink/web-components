@@ -56,3 +56,15 @@ is invoked from within the `src-nav`'s hierarchy.
 > * The `for` attribute must be set for this control to work.
 > * `src-nav` controls sharing the same `hash-name` will coordinate with each other.
 > * `src-nav` controls with different `hash-name`s will operate independenly.
+
+## ToggleButton
+
+```<toggle-button for events></toggle-button>```
+
+Toggles the `toggled` attribute on a target element when clicked.
+
+* **for**: Must be set to the ID of the element this `src-nav` configures navigations for.
+* **events**: Optional events listened for on the toggled element removing the `toggled` attribute.
+
+> Notes:
+> * The `for` attribute must be set for this control to work.
