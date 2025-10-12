@@ -32,9 +32,11 @@ class ShadowImport extends HTMLElement {
   get content() { return this.#content; } #content = this.attachShadow({ mode: 'open' });
   /**
    * @readonly
-   * @property {ContentScript} script - The script instance that currently handles the imported content.
+   * @property {InstanceType<ContentScript> | null} script - The script instance that currently handles the imported content.
    */
-  get script() { return this.#script; } #script = null;
+  get script() { return this.#script; } 
+  /** @type {InstanceType<ContentScript> | null} */ 
+  #script = null;
   /**
    * @readonly
    * @property {boolean} attached - Indicates whether the component is currently attached to content.
@@ -58,17 +60,17 @@ class ShadowImport extends HTMLElement {
       ?? await fetch(`${file}.html`).then(async r => r.ok ? (await r.text()) : null)
       ?? await fetch(`${file}.htm`).then(async r => r.ok ? (await r.text()) : null);
     if (text == null) { throw new Error(`Failed to load content from ${path} or ${file}.html or ${file}.htm`); }
-    const markup = component.text ? document.createElement('div').appendChild(document.createTextNode(text)).parentNode.innerHTML : text;
+    const markup = component.text ? document.createElement('div').appendChild(document.createTextNode(text)).parentElement?.innerHTML || '' : text;
     component.content.innerHTML = (!empty && component.css)
       ? `<link rel="stylesheet" href="${file}.css" />${markup}`
       : markup;
     if (empty || !component.js) { return; }
-    const url = new URL(file, location.href).href;
-    const module = await import(`${url}.js`);
-    const isScript = module.default && module.default.prototype instanceof ShadowImport.ContentScript;
-    if (!isScript) { throw new TypeError(`Expected a default export of a ContentScript from ${dassdf}.js`); }
-    component.#script = new module.default();
-    await component.script.attach(component.content);
+    const url = new URL(file, location.href).href; 
+    const module = (await import(`${url}.js`)).default;
+    const isScript = module && module.prototype instanceof ShadowImport.ContentScript;
+    if (!isScript) { throw new TypeError(`Expected a default export of a ContentScript from ${url}.js`); }
+    component.#script = new module();
+    await component.script?.attach(component.content);
   }
   /**
    * @async
@@ -89,6 +91,11 @@ class ShadowImport extends HTMLElement {
 
   async connectedCallback() { await ShadowImport.attach(this); }
   async disconnectedCallback() { await ShadowImport.detach(this); }
+  /**
+   * @param {string} name - The name of the changed attribute.
+   * @param {string|null} oldValue - The previous value of the attribute.
+   * @param {string|null} newValue - The new value of the attribute.
+   */
   async attributeChangedCallback(name, oldValue, newValue) {
     if (!this.attached) { return; }
     if (name === 'src') {

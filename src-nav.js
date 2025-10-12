@@ -1,3 +1,4 @@
+/** @typedef {{[key:string]: string}} KeyValue */
 export default
 /**
  * @class SrcNav
@@ -18,7 +19,7 @@ class SrcNav extends HTMLElement {
   /**
    * @property {string} attr - The attribute to use for navigation. Defaults to 'src'.
    */
-  get attr() { return this.hasAttribute('attr') ? this.getAttribute('attr') : 'src'; }
+  get attr() { return this.getAttribute('attr') || 'src'; }
   set attr(value) { value == null ? this.removeAttribute('attr') : this.setAttribute('attr', value); }
   /**
    * @readonly
@@ -28,6 +29,7 @@ class SrcNav extends HTMLElement {
   constructor() {
     super();
     this.addEventListener('click', e => {
+      if (!(e.target instanceof Element)) { return; }
       const target = e.target.closest('a');
       if (!target) { return; }
       if (target.hasAttribute('target')) { return; }
@@ -70,7 +72,7 @@ class SrcNav extends HTMLElement {
     component.#attached = false;
     window.removeEventListener('hashchange', component.#navHandler);
   }
-  #navHandler = e => SrcNav.navigate(this);
+  #navHandler = () => SrcNav.navigate(this);
   /**
    * @static
    * @method navigate
@@ -91,7 +93,7 @@ class SrcNav extends HTMLElement {
     if (nav == null) { return; } 
     const actives = items.filter(i => i.getAttribute('href') === nav);
     for (const item of actives) { item.classList.add('active'); }
-    const target = component.getRootNode()?.querySelector(`#${component.for}`);
+    const target = /** @type {Element} */(component.getRootNode())?.querySelector(`#${component.for}`);
     if (!target) { return; }
     const attr = component.attr;
     if (target.getAttribute(attr) === nav) { return; }
@@ -105,7 +107,7 @@ class SrcNav extends HTMLElement {
    * @static
    * @method getHash
    * @description Parses the current URL hash and returns an object with key-value pairs.
-   * @returns {Object} An object representing the hash parameters.
+   * @returns {KeyValue} An object representing the hash parameters.
    */
   static getHash() { 
     return Object.fromEntries(

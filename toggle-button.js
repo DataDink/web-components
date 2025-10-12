@@ -26,12 +26,12 @@ class ToggleButton extends HTMLElement {
    */
   getTarget() {
     let root = this.getRootNode();
-    while (root) {
-      const target = root.getElementById(this.for);
+    while (root instanceof ShadowRoot) {
+      const target = root.getElementById(this.for || '');
       if (target) { return target; }
-      root = root.host?.getRootNode() || document;
+      root = root.host;
     }
-    return null;
+    return document.getElementById(this.for || '') || null;
   }
   /**
    * @method toggle - Toggles the targeted element.
@@ -43,7 +43,7 @@ class ToggleButton extends HTMLElement {
     if (!target.hasAttribute('toggled')) { return; }
     const events = this.events ? this.events.split(/\s+/g) : [];
     if (!events.length) { return; }
-    const handler = e => {
+    const handler = () => {
       target.removeAttribute('toggled');
       for (const name of events) { target.removeEventListener(name, handler); }
     };

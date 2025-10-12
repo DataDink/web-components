@@ -9,7 +9,7 @@ class InlineImport extends HTMLElement {
   /**
    * @property {string} src - The URL to the content to import.
    */
-  get src() { return this.getAttribute('src'); }
+  get src() { return this.getAttribute('src') ?? ''; }
   set src(value) { value == null ? this.removeAttribute('src') : this.setAttribute('src', value); }
   /**
    * @property {boolean} importBefore - Set to true if the content should be inserted before the element.
@@ -25,7 +25,8 @@ class InlineImport extends HTMLElement {
    * @readonly
    * @property {Array} content - The content that is currently owned by this component.
    */
-  get content() { return [...this.#content]; } #content = [];
+  get content() { return [...this.#content]; } 
+  /** @type {ChildNode[]} */ #content = [];
   /**
    * @readonly
    * @property {boolean} attached - Indicates whether the component is currently attached to content.
@@ -60,11 +61,16 @@ class InlineImport extends HTMLElement {
   static async detach(component) {
     if (!(component instanceof InlineImport)) { throw new TypeError('Expected an instance of InlineImport'); }
     component.#attached = false;
-    while (component.#content.length) { component.#content.shift().remove(); }
+    while (component.#content.length) { component.#content.shift()?.remove(); }
   }
 
   async connectedCallback() { await InlineImport.attach(this); }
   async disconnectedCallback() { await InlineImport.detach(this); }
+  /**
+   * @param {string} name - The name of the changed attribute.
+   * @param {string|null} oldValue - The previous value of the attribute.
+   * @param {string|null} newValue - The new value of the attribute.
+   */
   async attributeChangedCallback(name, oldValue, newValue) {
     if (!this.attached) { return; }
     if (name === 'src') {
