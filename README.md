@@ -5,41 +5,48 @@ my common components for copy/paste
 > Breaking changes are sure to happen here.
 > These files should only be copy/pasted into projects, not linked to.
 
-## ShadowImport
+## ImportComponent
 
-```<shadow-import src css js></shadow-import>```
+```<import-component from target scripts reroute></import-component>```
 
-Loads the specified content into its shadow dom.
+A web component that imports content from a specified source URL or template ID.
 
-* **src**: The URL to the source content.
-* **css**: If set, will also link a CSS file of the same file name.
-* **js**: If set, will also load a JS module of the same file name.
-* **text**: If set, will load content as plain text.
+* **from**: The ID of a &lt;template&gt; or URL to an HTML fragment file.
+* **target**: Specifies how to insert content: 'insert', 'shadow', 'before', 'after', or queryselector to a container element.
+* **scripts**: If set, will process script elements.
+* **reroute**: If set, will reroute the urls of &lt;link&gt; and &lt;script&gt; elements.
 
-> Note: JS module content should import the ContentScript interface 
-> and export a default ContentScript subclass
+> Notes: 
+> * The `from` attribute must be set for this component to function.
+> * JS module content should export a default function that will be passed a `DocumentFragment` context object.
+> * The `DocumentFragment` passed to JS content will dispatch `attach` and `detatch` events.
+> * Once content is imported into the shadow root of an &gt;import-component&lt;, its 'insert' method will no longer work properly.
 
-```javascript
-import { ContentScript } from './shadow-import.js'
+### Example:
 
-export default class MyScript extends ContentScript {
-  async attach(root) {...}
-  async detach(root) {...}
-}
+**usage**
+```html
+<import-component from="components/my-component.html" scripts reroute></import-component>
 ```
 
-## InlineImport
+**my-component.html**
+```html
+<link rel="stylesheet" href="my-component.css" />
+<header>My Component</header>
+<p>Here is an example component</p>
+<script type="module" src="my-component.css"></script>
+```
 
-```<inline-import src import-before import-after></inline-import>```
-
-Loads the specified content inline to the document.
-
-* **src**: The URL to the source content.
-* **import-before**: If set, imports the content before the `inline-import` element.
-* **import-after**: If set, imports the content after the `inline-import` element.
-
-> Note: If neither `import-before` and `import-after` are specified 
-> the content will be imported inside the `inline-import` element.
+**my-component.js**
+```javascript
+export default async function module(/** @type {DocumentFragment} */context) {
+  const header = context.querySelector('header');
+  if (!header) { return; }
+  const suffix = ' (attached)';
+  context.addEventListener('attached', () => header.textContent += suffix);
+  context.addEventListener('detached', () => header.textContent = header.textContent.slice(0, -suffix.length));
+}
+```
 
 ## SrcNav
 
@@ -53,7 +60,7 @@ is invoked from within the `src-nav`'s hierarchy.
 * **attr**: Controls the attribute name the `src-nav` configures on the targeted element. Defaults to `src`.
 
 > Notes:
-> * The `for` attribute must be set for this control to work.
+> * The `for` attribute must be set for this control to function.
 > * `src-nav` controls sharing the same `hash-name` will coordinate with each other.
 > * `src-nav` controls with different `hash-name`s will operate independenly.
 
@@ -63,8 +70,8 @@ is invoked from within the `src-nav`'s hierarchy.
 
 Toggles the `toggled` attribute on a target element when clicked.
 
-* **for**: Must be set to the ID of the element this `src-nav` configures navigations for.
+* **for**: Must be set to the ID of the element this `toggle-button` configures attributes for.
 * **events**: Optional events listened for on the toggled element removing the `toggled` attribute.
 
 > Notes:
-> * The `for` attribute must be set for this control to work.
+> * The `for` attribute must be set for this control to function.
