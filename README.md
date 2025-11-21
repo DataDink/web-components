@@ -11,6 +11,8 @@ my common components for copy/paste
 
 A web component that imports content from a specified source URL or template ID.
 
+**Attributes:**
+
 * **from**: The ID of a &lt;template&gt; or URL to an HTML fragment file.
 * **target**: Specifies how to insert content: 'insert', 'shadow', 'before', 'after', or queryselector to a container element.
 * **scripts**: If set, will process script elements.
@@ -46,6 +48,42 @@ export default async function module(/** @type {DocumentFragment} */context) {
   context.addEventListener('attach', () => header.textContent += suffix);
   context.addEventListener('detach', () => header.textContent = header.textContent.slice(0, -suffix.length));
 }
+```
+
+## DataTemplate
+
+```<data-template target><template></template</data-template>```
+
+A web component that wraps a template and provides data binding functionality.
+
+**Attributes:**
+
+* **target**: Specifies how to insert content: 'shadow', 'before', 'after', or queryselector to a container element.
+
+**Properties:**
+
+* **render**: Generates template instances based on the given dataset and binder function `(data: any, binder: (this: DocumentFragment, data: any, context: DocumentFragment) => Promise<void>) => Promise<void>`
+
+### Example:
+
+**usage**
+```html
+<data-template target="after"><template>
+  <header></header>
+  <p></p>
+</template></data-template>
+<script>
+  const template = document.querySelector('data-template');
+  const data = [
+    {title: 'Title 1', text: 'Text 1'},
+    {title: 'Title 2', text: 'Text 2'},
+    {title: 'Title 3', text: 'Text 3'}
+  ];
+  template.render(data, (item, instance) => {
+    instance.querySelector('header').textContent = item.title;
+    instance.querySelector('p').textContent = item.text;
+  });
+</script>
 ```
 
 ## SrcNav
