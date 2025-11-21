@@ -6,15 +6,13 @@ export default
  */
 class ImportComponent extends HTMLElement {
   static #NODES = Symbol('import-nodes');
-  static get observedAttributes() { return ['from', 'target']; }
+  static get observedAttributes() { return ['from', 'target', 'reroute', 'scripts']; }
 
   /** @type {DocumentFragment | null} */
   #context = null;
-  /** @type {ShadowRoot | null} */
-  #shadow = null;
 
   /**
-   * @property {string} from - The source URL or template ID to pull content from.
+   * @property {string} from - The source URL or query-selector referencing a &lt;template&gt; to pull content from.
    */
   get from() { return this.getAttribute('from') ?? ''; }
   set from(value) { value == null ? this.removeAttribute('from') : this.setAttribute('from', value); }
@@ -39,10 +37,11 @@ class ImportComponent extends HTMLElement {
   /** @type {number | null} */
   #deferAttributeChange = null;
   attributeChangedCallback(/** @type {string} */ name, /** @type {string | null} */ oldValue, /** @type {string | null} */newValue) {
-    if (!this.#context || oldValue === newValue) { return; }
+    if (oldValue === newValue) { return; }
     if (ImportComponent.observedAttributes.includes(name)) {
       clearTimeout(/** @type {number} */(this.#deferAttributeChange));
       this.#deferAttributeChange = setTimeout(() => {
+        if (!this.#context) { return; }
         ImportComponent.clear(this);
         ImportComponent.import(this);
       }, 0);
@@ -59,8 +58,55 @@ class ImportComponent extends HTMLElement {
     if (!component.#context) { return; }
     const nodes = /** @type {Node[]} */(/** @type {any} */(component.#context)[ImportComponent.#NODES] ?? []);
     while (nodes.length) { component.#context.appendChild(/** @type {Node} */(nodes.shift())); }
+    component.dispatchEvent(new CustomEvent('remove', { detail: component.#context, bubbles: true, composed: true }));
     component.#context.dispatchEvent(new CustomEvent('detach'));
     component.#context = null;
+  }
+  /**
+   * @method getTargetContext
+   * @description Locates the target context element for content insertion based on the `target` attribute.
+   * @param {ImportComponent} component - The instance of ImportComponent to locate the target for.
+   * @returns {Node | null} The context node for insertion or null.
+   */
+  static getTargetContext(component) {
+    if (component.target === 'insert') { return component; }
+    if (component.target === 'before') { return component; }
+    if (component.target === 'after') { return component.nextSibling; }
+    if (component.target === 'shadow') { return component.shadowRoot ?? component.attachShadow({ mode: 'open' }); }
+    let root = /** @type {ShadowRoot} */(component.getRootNode());
+    while (root) {
+      const found = root.querySelector(component.target ?? '');
+      if (found) { return found; }
+      root = /** @type {ShadowRoot} */(root.host?.getRootNode());
+    }
+    return null;
+  }
+  /**
+   * @async
+   * @static
+   * @method getFromContent
+   * @description Retrieves content from the specified source URL or template ID.
+   * @param {ImportComponent} component - The instance of ImportContent to get content for.
+   * @returns {Promise<DocumentFragment>} The retrieved content as a DocumentFragment.
+   */
+  static async getFromContent(component) {
+    try {
+      let root = /** @type {ShadowRoot} */(component.getRootNode());
+      while (root) {
+        const found = root.querySelector(component.from ?? '');
+        if (found instanceof HTMLTemplateElement) {
+          return /** @type {DocumentFragment} */(found.content.cloneNode(true));
+        }
+        root = /** @type {ShadowRoot} */(root.host?.getRootNode());
+      }
+    } catch { }
+    const html = await (await fetch(component.from)).text();
+    const fragment = document.createDocumentFragment();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    while (doc.head.firstChild) { fragment.appendChild(doc.head.firstChild); }
+    while (doc.body.firstChild) { fragment.appendChild(doc.body.firstChild); }
+    if (component.reroute) { ImportComponent.rerouteContent(component, fragment); }
+    return fragment;
   }
   /**
    * @async
@@ -70,99 +116,53 @@ class ImportComponent extends HTMLElement {
    * @param {ImportComponent} component - The instance of ImportContent to import with.
    */
   static async import(component) {
+    ImportComponent.clear(component);
     if (!component.from) { return; }
-    const local = /** @type {DocumentFragment} */(ImportComponent.searchTemplate(component)?.content?.cloneNode(true));
-    component.#context = local ?? await ImportComponent.downloadContent(component);
-    /** @type {any} */(component.#context)[ImportComponent.#NODES] = [...component.#context.childNodes];
-    if (!local && component.reroute) { 
-      ImportComponent.rerouteContent(component); 
-    }
+    component.#context = await ImportComponent.getFromContent(component);
     if (component.scripts) {
       for (const script of [...component.#context.querySelectorAll('script')]) { 
         try { await ImportComponent.executeScript(component, script); }
         catch (error) { console.error(`Error executing imported script: ${error}`, error); }
       }
     }
+    /** @type {any} */(component.#context)[ImportComponent.#NODES] = [...component.#context.childNodes];
+    component.dispatchEvent(new CustomEvent('insert', { detail: component.#context, bubbles: true, composed: true }));
+    const target = /** @type {Element} */ImportComponent.getTargetContext(component);
     switch (component.target) {
       case 'shadow':
-        (component.#shadow ??= component.attachShadow({ mode: 'open' })).appendChild(component.#context);
+        target?.appendChild(component.#context);
         break;
       case 'insert':
-        component.appendChild(component.#context);
+        target?.appendChild(component.#context);
         break;
       case 'before':
-        component.parentNode?.insertBefore(component.#context, component);
+        component.parentNode?.insertBefore(component.#context, target);
         break;
       case 'after':
-        component.parentNode?.insertBefore(component.#context, component.nextSibling);
+        component.parentNode?.insertBefore(component.#context, target);
         break;
       default:
-        let root = /** @type {ShadowRoot} */ (component.getRootNode());
-        while (root) {
-          const target = root.querySelector(component.target ?? '');
-          if (target) { 
-            target.appendChild(component.#context);
-            break;
-          }
-          root = /** @type {ShadowRoot} */ (root.host?.getRootNode());
-        }
+        target?.appendChild(component.#context);
         break;
     }
     component.#context.dispatchEvent(new CustomEvent('attach'));
   }
   /**
    * @static
-   * @method searchTemplate
-   * @description Searches for a template element with the specified ID in the component's ancestor tree.
-   * @param {ImportComponent} component - The instance of ImportContent to search from.
-   * @returns {HTMLTemplateElement | null} The found template element or null if not found.
-   */
-  static searchTemplate(component) {
-    if (!component.from?.trim()) { return null; }
-    let root = /** @type {ShadowRoot} */ (component.getRootNode());
-    while (root) {
-      const template = root.getElementById(component.from);
-      if (template instanceof HTMLTemplateElement) { return template; }
-      root = /** @type {ShadowRoot} */ (root.host?.getRootNode());
-    }
-    return null;
-  }
-  /**
-   * @async
-   * @static
-   * @method downloadContent
-   * @description Downloads content from the specified source URL.
-   * @param {ImportComponent} component - The instance of ImportContent to download content for.
-   * @returns {Promise<DocumentFragment>} The downloaded content as a DocumentFragment.
-   */
-  static async downloadContent(component) {
-    const html = await (await fetch(component.from)).text();
-    const fragment = document.createDocumentFragment();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    while (doc.head.firstChild) {
-      fragment.appendChild(doc.head.firstChild);
-    }
-    while (doc.body.firstChild) {
-      fragment.appendChild(doc.body.firstChild);
-    }
-    return fragment;
-  }
-  /**
-   * @static
    * @method rerouteContent
    * @description Reroutes script and link elements in the imported content to be relative to the source URL.
    * @param {ImportComponent} component - The instance of ImportContent to reroute content for.
+   * @param {DocumentFragment} content - The content to reroute.
    */
-  static rerouteContent(component) {
-    if (!component.#context || !component.from) { return; }
+  static rerouteContent(component, content) {
     const baseUrl = new URL(component.from, location.href);
-    for (const link of [...component.#context.querySelectorAll('link[href]')]) {
+    for (const link of [...content.querySelectorAll('link[href]')]) {
       const href = link.getAttribute('href');
       if (!href) { continue; }
       const url = new URL(href, baseUrl);
       link.setAttribute('href', url.href);
     }
-    for (const script of [...component.#context.querySelectorAll('script[src]')]) {
+    for (const script of [...content.querySelectorAll('script[src]')]) {
       const src = script.getAttribute('src');
       if (!src) { continue; }
       const url = new URL(src, baseUrl);

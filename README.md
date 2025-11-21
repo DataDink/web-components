@@ -18,9 +18,10 @@ A web component that imports content from a specified source URL or template ID.
 
 > Notes: 
 > * The `from` attribute must be set for this component to function.
+> * `insert` and `remove` events are dispatched from the component: `{detail: DocumentFragment}`
 > * JS module content should export a default function that will be passed a `DocumentFragment` context object.
 > * The `DocumentFragment` passed to JS content will dispatch `attach` and `detatch` events.
-> * Once content is imported into the shadow root of an &gt;import-component&lt;, its 'insert' method will no longer work properly.
+> * Once content is imported into the shadow root of an &lt;import-component&gt;, its 'insert' method will no longer work properly.
 
 ### Example:
 
@@ -34,17 +35,16 @@ A web component that imports content from a specified source URL or template ID.
 <link rel="stylesheet" href="my-component.css" />
 <header>My Component</header>
 <p>Here is an example component</p>
-<script type="module" src="my-component.css"></script>
+<script type="module" src="my-component.js"></script>
 ```
 
 **my-component.js**
 ```javascript
 export default async function module(/** @type {DocumentFragment} */context) {
   const header = context.querySelector('header');
-  if (!header) { return; }
   const suffix = ' (attached)';
-  context.addEventListener('attached', () => header.textContent += suffix);
-  context.addEventListener('detached', () => header.textContent = header.textContent.slice(0, -suffix.length));
+  context.addEventListener('attach', () => header.textContent += suffix);
+  context.addEventListener('detach', () => header.textContent = header.textContent.slice(0, -suffix.length));
 }
 ```
 
