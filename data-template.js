@@ -3,6 +3,8 @@ export default
  * @class DataTemplate
  * @extends {HTMLElement}
  * @description A web component that wraps a template and renders instances based on a dataset and binding function.
+ * @author Greenwald
+ * @source https://github.com/DataDink/web-components
  */
 class DataTemplate extends HTMLElement {
   static #NODES = Symbol('data-template-nodes');
@@ -55,8 +57,6 @@ class DataTemplate extends HTMLElement {
       }, 0);
     }
   }
-
-  // Note: Static methods are for future testability and extensibility.
 
   /**
    * @static

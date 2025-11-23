@@ -3,7 +3,15 @@ my common components for copy/paste
 
 > [!WARNING]
 > Breaking changes are sure to happen here.
+> These components will continue to evolve and deprioritize backwards compatibility.
 > These files should only be copy/pasted into projects, not linked to.
+
+# Rules
+* Portable
+* Standalone
+* ES Module
+* No Compile / Raw JS
+* JSDOC Fully Documented
 
 ## ImportComponent
 
@@ -62,7 +70,13 @@ A web component that wraps a template and provides data binding functionality.
 
 **Properties:**
 
-* **render**: Generates template instances based on the given dataset and binder function `(data: any, binder: (this: DocumentFragment, data: any, context: DocumentFragment) => Promise<void>) => Promise<void>`
+* **render(data, binder)**: Generates template instances based on the given dataset and binder function
+  * **data: any|any[]**: The data to render
+  * **binder(data, context)**: The async binder function
+    * **data: any**: The data item being rendered
+    * **context: DocumentFragment**: A context containing the content to be rendered to the DOM
+      * **event: attach**: Event dispatched from the context after the content is inserted in the DOM
+      * **event: detach**: Event dispatched from the context after the content is removed from the DOM
 
 ### Example:
 

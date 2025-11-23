@@ -2,6 +2,8 @@ export default
 /**
  * @class ToggleButton - A button that toggles the state of another element.
  * @extends HTMLElement
+ * @author Greenwald
+ * @source https://github.com/DataDink/web-components
  */
 class ToggleButton extends HTMLElement {
   /** @property {string} for - The id of the element to be toggled */
@@ -13,11 +15,6 @@ class ToggleButton extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' }).innerHTML = `
-      <button part="button" type="button">
-        <slot></slot>
-      </button>
-    `;
     this.addEventListener('click', this.toggle);
   }
   /**

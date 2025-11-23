@@ -4,6 +4,8 @@ export default
  * @class SrcNav
  * @extends HTMLElement
  * @description A custom element that sets a target element's src attribute when an HTMLAnchorElement is invoked from its hierarchy.
+ * @author Greenwald
+ * @source https://github.com/DataDink/web-components
  */
 class SrcNav extends HTMLElement {
   /**

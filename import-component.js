@@ -3,6 +3,8 @@ export default
  * @class ImportComponent
  * @extends {HTMLElement}
  * @description A web component that imports content from a specified source URL or template ID.
+ * @author Greenwald
+ * @source https://github.com/DataDink/web-components
  */
 class ImportComponent extends HTMLElement {
   static #NODES = Symbol('import-nodes');
