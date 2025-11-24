@@ -60,7 +60,7 @@ export default async function module(/** @type {DocumentFragment} */context) {
 
 ## DataTemplate
 
-```<data-template target><template></template</data-template>```
+```<data-template target><template></template></data-template>```
 
 A web component that wraps a template and provides data binding functionality.
 
