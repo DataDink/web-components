@@ -42,6 +42,14 @@ class NavComponent extends HTMLElement {
         }
       }
       NavComponent.push(this);
+      this.dispatchEvent(new CustomEvent('navigation', {
+        detail: {
+          component: this,
+          source: target
+        },
+        bubbles: true,
+        composed: true
+      }));
     });
     new MutationObserver(records => {
       const ignore = records.every(r => r.attributeName === 'class');

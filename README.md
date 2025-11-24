@@ -100,21 +100,21 @@ A web component that wraps a template and provides data binding functionality.
 </script>
 ```
 
-## SrcNav
+## NavComponent
 
-```<src-nav hash-name for attr></src-nav>```
+```<nav-component hash-name target attribute></nav-component>```
 
 Sets a target element's `src` attribute when an HTMLAnchorElement 
-is invoked from within the `src-nav`'s hierarchy.
+is invoked from within the `nav-component`'s hierarchy.
 
-* **hash-name**: Setting a `hash-name` allows the `src-nav` to leverage the address' hash to respond to changes and coordinate with other `src-nav`s
-* **for**: Must be set to the ID of the element this `src-nav` configures navigations for.
-* **attr**: Controls the attribute name the `src-nav` configures on the targeted element. Defaults to `src`.
+* **hash-name**: Setting a `hash-name` allows the `nav-component` to leverage the address' hash to respond to changes and coordinate with other `nav-component`s
+* **target**: The query selector for the element(s) `nav-component` configures navigations for.
+* **attribute**: Controls the attribute name the `nav-component` configures on the targeted element. Defaults to `src`.
 
 > Notes:
-> * The `for` attribute must be set for this control to function.
-> * `src-nav` controls sharing the same `hash-name` will coordinate with each other.
-> * `src-nav` controls with different `hash-name`s will operate independenly.
+> * The `target` attribute must be set for this control to function.
+> * `nav-component` controls sharing the same `hash-name` will coordinate with each other.
+> * `nav-component` controls with different `hash-name`s will operate independenly.
 
 ## ToggleButton
 
