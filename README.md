@@ -1,5 +1,5 @@
 # web-components
-my common components for copy/paste
+_my common components for copy/paste_
 
 > [!WARNING]
 > Breaking changes are sure to happen here.
@@ -11,7 +11,9 @@ my common components for copy/paste
 * Standalone
 * ES Module
 * No Compile / Raw JS
-* JSDOC Fully Documented
+* JSDOC/TS Fully Documented
+
+# Components
 
 ## ImportComponent
 

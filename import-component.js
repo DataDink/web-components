@@ -8,6 +8,7 @@ export default
  */
 class ImportComponent extends HTMLElement {
   static #NODES = Symbol('import-nodes');
+  /** @static @readonly @property {string[]} observedAttributes - The static list of attributes this custom element listens to. */
   static get observedAttributes() { return ['from', 'target', 'reroute', 'scripts']; }
 
   /** @type {DocumentFragment | null} */
