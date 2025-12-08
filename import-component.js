@@ -44,7 +44,6 @@ class ImportComponent extends HTMLElement {
     if (ImportComponent.observedAttributes.includes(name)) {
       clearTimeout(/** @type {number} */(this.#deferAttributeChange));
       this.#deferAttributeChange = setTimeout(() => {
-        if (!this.#context) { return; }
         ImportComponent.clear(this);
         ImportComponent.import(this);
       }, 0);
@@ -120,7 +119,7 @@ class ImportComponent extends HTMLElement {
    */
   static async import(component) {
     ImportComponent.clear(component);
-    if (!component.from) { return; }
+    if (!component.isConnected || !component.from) { return; }
     component.#context = await ImportComponent.getFromContent(component);
     if (component.scripts) {
       for (const script of [...component.#context.querySelectorAll('script')]) { 
